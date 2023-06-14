@@ -1,8 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Post, Category, User, Comment
 from django.core.paginator import Paginator
 from django.urls import reverse
-from .forms import PostForm, UserForm, CommentForm
 from django.views.generic import (
     CreateView, DetailView, ListView, UpdateView, DeleteView
 )
@@ -10,6 +8,11 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
+
+from .models import Post, Category, User, Comment
+from .forms import PostForm, UserForm, CommentForm
+
+PAGE_SIZE = 10
 
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
@@ -24,7 +27,7 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
 def profile_view(request, username):
     profile = get_object_or_404(User, username=username)
     post = profile.posts.all()
-    paginator = Paginator(post, 10)
+    paginator = Paginator(post, PAGE_SIZE)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     template_name = 'blog/profile.html'
@@ -44,7 +47,7 @@ class PostListView(ListView):
         pub_date__lt=timezone.now(),
         category__is_published=True
     ).order_by('-pub_date')
-    paginate_by = 10
+    paginate_by = PAGE_SIZE
     template_name = 'blog/index.html'
 
 
@@ -106,7 +109,7 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
 class CategoryDetailView(DetailView):
     model = Category
     template_name = 'blog/category.html'
-    paginate_by = 5
+    paginate_by = PAGE_SIZE
 
 
 def category_posts(request, slug):
@@ -119,7 +122,7 @@ def category_posts(request, slug):
         pub_date__lt=timezone.now(),
         category__is_published=True
     )
-    paginator = Paginator(post, 10)
+    paginator = Paginator(post, PAGE_SIZE)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     template_name = 'blog/category.html'
